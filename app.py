@@ -23,7 +23,7 @@ print('---- joined data')
 print(data.head())
 
 y = data.fraudulent
-X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB']]
+X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB', 'cc_US']]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 lr_model = LogisticRegression().fit(X_train, y_train)
