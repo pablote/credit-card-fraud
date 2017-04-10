@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.cross_validation import train_test_split
-from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import roc_curve, roc_auc_score
 import matplotlib.pyplot as plt
 
@@ -25,14 +25,15 @@ y = data.fraudulent
 X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB', 'cc_US']]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-lr_model = LogisticRegression().fit(X_train, y_train)
+# dt_model = DecisionTreeClassifier(max_depth=3, min_samples_split=20).fit(X_train, y_train)
+dt_model = DecisionTreeClassifier(max_depth=10, min_samples_split=5).fit(X_train, y_train)
 
 print('---- model')
-print(lr_model.coef_)
-print(lr_model.intercept_)
+print(dt_model.tree_)
+# print(lr_model.intercept_)
 
 print('---- test')
-y_test_predict_lr = lr_model.predict_proba(X_test)
+y_test_predict_lr = dt_model.predict_proba(X_test)
 # print(y_test_predict_lr)
 # print(lr_model.classes_)
 y_test_scores_lr = [x[1] for x in y_test_predict_lr]
