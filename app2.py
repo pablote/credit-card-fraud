@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.cross_validation import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -24,10 +25,15 @@ print(data.head())
 y = data.fraudulent
 X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB', 'cc_US']]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-lr_model = LogisticRegression().fit(X_train, y_train)
+X_poly = PolynomialFeatures(3).fit_transform(X)
+
+scaler = StandardScaler().fit(X_poly)
+X_scaled = scaler.transform(X_poly)
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3)
 
 print('---- model')
+lr_model = LogisticRegression().fit(X_train, y_train)
 print(lr_model.coef_)
 print(lr_model.intercept_)
 
