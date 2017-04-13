@@ -26,11 +26,13 @@ print(data.head())
 y = data.fraudulent
 X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB', 'cc_US']]
 
-X_poly = PolynomialFeatures(3).fit_transform(X)
+poly = PolynomialFeatures(2)
+X_poly = poly.fit_transform(X)
 
 scaler = StandardScaler().fit(X_poly)
 X_scaled = scaler.transform(X_poly)
 
+# TODO: do this before preprocessing?
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3)
 
 print('---- model')
@@ -64,4 +66,6 @@ for model in models:
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic (%s)' % model[0])
     plt.legend(loc="lower right")
+
+    # TODO: calculate f1, another metric? learning curve?
 plt.show()
