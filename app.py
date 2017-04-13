@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.cross_validation import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import roc_curve, roc_auc_score
 import matplotlib.pyplot as plt
 
@@ -33,27 +34,34 @@ X_scaled = scaler.transform(X_poly)
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3)
 
 print('---- model')
+models = []
+
 lr_model = LogisticRegression().fit(X_train, y_train)
-print(lr_model.coef_)
-print(lr_model.intercept_)
+print('logistic regression: coef: ' + str(lr_model.coef_))
+print('logistic regression: intercept: ' + str(lr_model.intercept_))
+models.append(('Logistic regression', lr_model))
+
+dt_model = DecisionTreeClassifier(max_depth=10, min_samples_split=5).fit(X_train, y_train)
+models.append(('Random forest', dt_model))
 
 print('---- test')
-y_test_predict_lr = lr_model.predict_proba(X_test)
-# print(y_test_predict_lr)
-# print(lr_model.classes_)
-y_test_scores_lr = [x[1] for x in y_test_predict_lr]
+figure = 0
+for model in models:
+    figure = figure + 1
+    y_test_predict_lr = model[1].predict_proba(X_test)
+    y_test_scores_lr = [x[1] for x in y_test_predict_lr]
 
-fpr, tpr, thresholds = roc_curve(y_test, y_test_scores_lr)
-auc_score = roc_auc_score(y_test, y_test_scores_lr)
+    fpr, tpr, thresholds = roc_curve(y_test, y_test_scores_lr)
+    auc_score = roc_auc_score(y_test, y_test_scores_lr)
 
-plt.figure()
-plt.plot(fpr, tpr, color='darkorange',
-         lw=2, label='ROC curve (area = %0.2f)' % auc_score)
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver operating characteristic')
-plt.legend(loc="lower right")
+    plt.figure(figure)
+    plt.plot(fpr, tpr, color='darkorange',
+             lw=2, label='ROC curve (area = %0.2f)' % auc_score)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic (%s)' % model[0])
+    plt.legend(loc="lower right")
 plt.show()
