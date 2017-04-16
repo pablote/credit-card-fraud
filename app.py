@@ -1,6 +1,8 @@
 import pandas as pd
-from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import roc_curve, roc_auc_score
 import matplotlib.pyplot as plt
 
@@ -18,36 +20,53 @@ encoded_countries = pd.get_dummies(data.card_country, prefix='cc')
 print(encoded_countries.head())
 
 data = data.join(encoded_countries)
-print('---- joined data')
+print('---- prepare data')
 print(data.head())
 
 y = data.fraudulent
 X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB', 'cc_US']]
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-lr_model = LogisticRegression().fit(X_train, y_train)
+
+print('---- normalize data')
+poly = PolynomialFeatures(2)
+X_train_poly = poly.fit_transform(X_train)
+
+scaler = StandardScaler().fit(X_train_poly)
+X_train_scaled = scaler.transform(X_train_poly)
 
 print('---- model')
-print(lr_model.coef_)
-print(lr_model.intercept_)
+models = []
+
+lr_model = LogisticRegression().fit(X_train_scaled, y_train)
+print('logistic regression: coef: ' + str(lr_model.coef_))
+print('logistic regression: intercept: ' + str(lr_model.intercept_))
+models.append(('Logistic regression', lr_model))
+
+dt_model = DecisionTreeClassifier(max_depth=10, min_samples_split=5).fit(X_train_scaled, y_train)
+models.append(('Random forest', dt_model))
 
 print('---- test')
-y_test_predict_lr = lr_model.predict_proba(X_test)
-# print(y_test_predict_lr)
-# print(lr_model.classes_)
-y_test_scores_lr = [x[1] for x in y_test_predict_lr]
+figure = 0
+X_test_poly = poly.fit_transform(X_test)
+X_test_scaled = scaler.transform(X_test_poly)
 
-fpr, tpr, thresholds = roc_curve(y_test, y_test_scores_lr)
-auc_score = roc_auc_score(y_test, y_test_scores_lr)
+for model in models:
+    figure = figure + 1
+    print('Score for %s: %s' % (model[0], model[1].score(X_test_scaled, y_test)))
+    y_test_predict_lr = model[1].predict_proba(X_test_scaled)
+    y_test_scores_lr = [x[1] for x in y_test_predict_lr]
 
-plt.figure()
-plt.plot(fpr, tpr, color='darkorange',
-         lw=2, label='ROC curve (area = %0.2f)' % auc_score)
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver operating characteristic')
-plt.legend(loc="lower right")
+    fpr, tpr, thresholds = roc_curve(y_test, y_test_scores_lr)
+    auc_score = roc_auc_score(y_test, y_test_scores_lr)
+
+    plt.figure(figure)
+    plt.plot(fpr, tpr, color='darkorange',
+             lw=2, label='ROC curve (area = %0.2f)' % auc_score)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic (%s)' % model[0])
+    plt.legend(loc="lower right")
 plt.show()
