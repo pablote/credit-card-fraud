@@ -20,37 +20,39 @@ encoded_countries = pd.get_dummies(data.card_country, prefix='cc')
 print(encoded_countries.head())
 
 data = data.join(encoded_countries)
-print('---- joined data')
+print('---- prepare data')
 print(data.head())
 
 y = data.fraudulent
 X = data[['amount', 'card_use_24h', 'cc_AU', 'cc_GB', 'cc_US']]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
+print('---- normalize data')
 poly = PolynomialFeatures(2)
-X_poly = poly.fit_transform(X)
+X_train_poly = poly.fit_transform(X_train)
 
-scaler = StandardScaler().fit(X_poly)
-X_scaled = scaler.transform(X_poly)
-
-# TODO: do this before preprocessing?
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3)
+scaler = StandardScaler().fit(X_train_poly)
+X_train_scaled = scaler.transform(X_train_poly)
 
 print('---- model')
 models = []
 
-lr_model = LogisticRegression().fit(X_train, y_train)
+lr_model = LogisticRegression().fit(X_train_scaled, y_train)
 print('logistic regression: coef: ' + str(lr_model.coef_))
 print('logistic regression: intercept: ' + str(lr_model.intercept_))
 models.append(('Logistic regression', lr_model))
 
-dt_model = DecisionTreeClassifier(max_depth=10, min_samples_split=5).fit(X_train, y_train)
+dt_model = DecisionTreeClassifier(max_depth=10, min_samples_split=5).fit(X_train_scaled, y_train)
 models.append(('Random forest', dt_model))
 
 print('---- test')
 figure = 0
+X_test_poly = poly.fit_transform(X_test)
+X_test_scaled = scaler.transform(X_test_poly)
+
 for model in models:
     figure = figure + 1
-    y_test_predict_lr = model[1].predict_proba(X_test)
+    y_test_predict_lr = model[1].predict_proba(X_test_scaled)
     y_test_scores_lr = [x[1] for x in y_test_predict_lr]
 
     fpr, tpr, thresholds = roc_curve(y_test, y_test_scores_lr)
