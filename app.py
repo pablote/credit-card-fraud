@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -52,6 +52,7 @@ X_test_scaled = scaler.transform(X_test_poly)
 
 for model in models:
     figure = figure + 1
+    print('Score for %s: %s' % (model[0], model[1].score(X_test_scaled, y_test)))
     y_test_predict_lr = model[1].predict_proba(X_test_scaled)
     y_test_scores_lr = [x[1] for x in y_test_predict_lr]
 
@@ -68,6 +69,4 @@ for model in models:
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic (%s)' % model[0])
     plt.legend(loc="lower right")
-
-    # TODO: calculate f1, another metric? learning curve?
 plt.show()
